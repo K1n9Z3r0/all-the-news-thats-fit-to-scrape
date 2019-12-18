@@ -3,22 +3,16 @@ var bodyParser = require('body-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
 var path = require('path');
-
-// Scraping tools
 var request = require('request');
 var cheerio = require('cheerio');
-
-// Requiring Note and Article models
 var db = require("./models");
 
-// Set mongoose to leverage built-in ES6 Promise
 mongoose.Promise = Promise;
 
 var PORT = process.env.PORT || 3000;
 
 var app = express();
 
-// Use morgan and body parser middleware
 app.use(logger("dev"));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static('public'));
@@ -41,9 +35,6 @@ conn.once('open', function() {
     console.log('Mongoose connection successful.');
 });
 
-// Routes
-
-// GET request to render handlebars page
 app.get("/", function(req, res) {
     db.Article.find({saved: false}, function(error, data) {
         var hbsObject = {
@@ -65,7 +56,6 @@ app.get("/saved", function(req, res) {
     });
 });
 
-// A GET route for scraping the echoJS website
 app.get('/scrape', function(req, res) {
     request('http://www.echojs.com', function(error, response, html) {
         var $ = cheerio.load(html);
@@ -76,7 +66,6 @@ app.get('/scrape', function(req, res) {
             result.title = $(this).children('a').text();
             result.link = $(this).children('a').attr('href');
 
-            // Create a new article using result object built from scraping
             db.Article.create(result)
                 .then(function(dbArticle) {
                     console.log(dbArticle);
@@ -85,12 +74,10 @@ app.get('/scrape', function(req, res) {
                     console.log(err);
                 });
         });
-        // Send a message to the client
         res.send("Scrape Complete");
     });
 });
 
-// This will get the articles we scraped from the mongoDB
 app.get("/articles", function(req, res) {
     db.Article.find({})
     .then(function(dbArticle) {
@@ -101,7 +88,6 @@ app.get("/articles", function(req, res) {
     });
 });
 
-// Grab an article by it's ObjectId
 app.get('/articles/:id', function(req, res) {
     db.Article.findOne({ _id: req.params.id })
     .populate('note')
@@ -113,7 +99,6 @@ app.get('/articles/:id', function(req, res) {
     });
 });
 
-// Save an article
 app.post('/articles/save/:id', function(req, res) {
     db.Article.findOneAndUpdate({ _id: req.params.id }, { saved: true})
     .then(function(dbArticle) {
@@ -124,7 +109,6 @@ app.post('/articles/save/:id', function(req, res) {
     });
 });
 
-// Delete an article
 app.post('/articles/delete/:id', function(req, res) {
     db.Article.findOneAndUpdate({ _id: req.params.id }, { saved: false, notes: [] }, function(err) {
         if (err) {
@@ -144,7 +128,6 @@ app.post('/articles/delete/:id', function(req, res) {
     }); 
 });
 
-// Create a new note
 app.post("/notes/save/:id", function(req, res) {
     var newNote = new db.Note ({
         body: req.body.text,
@@ -163,7 +146,6 @@ app.post("/notes/save/:id", function(req, res) {
     });
 });    
 
-// Delete a note
 app.delete('/notes/delete/:note_id/:article_id', function(req, res) {
     db.Note.findOneAndRemove({ _id: req.params.note_id }, function(err) {
         if (err) {
@@ -183,7 +165,6 @@ app.delete('/notes/delete/:note_id/:article_id', function(req, res) {
     });
 });
 
-// Start the server
 app.listen(PORT, function() {
     console.log(`App running on port ${PORT}!`);
 })
