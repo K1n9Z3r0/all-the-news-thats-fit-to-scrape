@@ -6,7 +6,7 @@ var cheerio = require("cheerio");
 
 var db = require("./models");
 
-var PORT = 3000;
+let PORT = process.env.PORT || 3000;
 
 var app = express();
 
@@ -17,7 +17,9 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-// mongoose.connect("mongodb://<dbuser>:<dbpassword>@ds163745.mlab.com:63745/heroku_cb0dgjh0", { useNewUrlParser: true });
+mongoose.connect("mongodb://news:Pass9376@ds163745.mlab.com:63745/heroku_cb0dgjh0", { useNewUrlParser: true });
+
+// heroku_cb0dgjh0
 
 mongoose.connect("mongodb://localhost/scraper", { useNewUrlParser: true });
 
